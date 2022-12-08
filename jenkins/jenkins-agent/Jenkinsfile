@@ -3,7 +3,9 @@
 pipeline {
   agent { 
     dockerfile {
-      filename 'jenkins/jenkins-agent/Dockerfile'
+      filename 'Dockerfile'
+      dir 'jenkins/jenkins-agent'
+      args '-v /certs/client:/certs/client -n jenkins'
     }
    }
   stages {
