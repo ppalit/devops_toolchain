@@ -21,3 +21,42 @@ security:
     authenticators:
     - global:
         strategy: triggeringUsersAuthorizationStrategy
+
+jobs:
+  - script: >
+    job('example') {
+      steps {
+        shell('echo Hello World!')
+      }
+    }
+  - script: >
+    job('Terraform Verify') {
+      steps {
+        shell('terraform -version')
+      }
+    }
+  - script: >
+      folder('testjobs')
+  - script: >
+      pipelineJob('DSL_Pipeline') {
+
+        def repo = 'https://github.com/jenkinsci/configuration-as-code-plugin.git'
+
+        triggers {
+          scm('H/5 * * * *')
+        }
+        description("Pipeline for $repo")
+
+        definition {
+          cpsScm {
+            scm {
+              git {
+                remote { url(repo) }
+                branches('master', '**/feature*')
+                scriptPath('misc/Jenkinsfile.v2')
+                extensions { }  // required as otherwise it may try to tag the repo, which you may not want
+              }
+            }
+          }
+        }
+      }
