@@ -6,41 +6,39 @@ jenkins:
     local:
       allowsSignup: false
       users:
-       - id: ${JENKINS_ADMIN_ID}
-         password: ${JENKINS_ADMIN_PASSWORD}
+        - id: ${JENKINS_ADMIN_ID}
+          password: ${JENKINS_ADMIN_PASSWORD}
   authorizationStrategy:
     globalMatrix:
       permissions:
         - "Overall/Administer:admin"
         - "Overall/Read:authenticated"
   remotingSecurity:
-      enabled: true
+    enabled: true
 
 security:
   queueItemAuthenticator:
     authenticators:
-    - global:
-        strategy: triggeringUsersAuthorizationStrategy
+      - global:
+          strategy: triggeringUsersAuthorizationStrategy
 
 jobs:
   - script: >
-    job('example') {
-      steps {
-        shell('echo Hello World!')
+      job('example') {
+       steps {
+         shell('echo Hello World!')
+       }
       }
-    }
   - script: >
-    job('Terraform Verify') {
-      steps {
-        shell('terraform -version')
+      job('Terraform Verify') {
+       steps {
+         shell('terraform -version')
+       }
       }
-    }
   - script: >
-      folder('testjobs')
-  - script: >
-      pipelineJob('DSL_Pipeline') {
+      pipelineJob('Toolchain') {
 
-        def repo = 'https://github.com/jenkinsci/configuration-as-code-plugin.git'
+        def repo = 'https://github.com/ppalit/devops_toolchain.git'
 
         triggers {
           scm('H/5 * * * *')
@@ -53,10 +51,37 @@ jobs:
               git {
                 remote { url(repo) }
                 branches('master', '**/feature*')
-                scriptPath('misc/Jenkinsfile.v2')
+                scriptPath('jenkins/jenkins-agent/Jenkinsfile')
                 extensions { }  // required as otherwise it may try to tag the repo, which you may not want
               }
             }
           }
+        }
+      }
+  - script: >
+      pipelineJob('docker agent') {
+
+        def repo = 'https://github.com/darinpope/jenkins-example-docker.git'
+
+        description("Pipeline for $repo")
+
+        definition {
+          cpsScm {
+            scm {
+              git {
+                remote { url(repo) }
+                branches('master')
+                scriptPath('Jenkinsfile-3')
+                extensions { }  // required as otherwise it may try to tag the repo, which you may not want
+              }
+            }
+          }
+        }
+      }
+  - script: >
+      listView('Pipeline-view') {
+        jobs {
+          name('Toolchain')
+          name('docker agent')
         }
       }
