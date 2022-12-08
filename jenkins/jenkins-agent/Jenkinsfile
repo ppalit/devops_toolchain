@@ -1,7 +1,11 @@
 
 
 pipeline {
-  agent { dockerfile true }
+  agent { 
+    dockerfile {
+      filename 'jenkins/jenkins-agent/Dockerfile'
+    }
+   }
   stages {
     stage('Test') {
       steps {

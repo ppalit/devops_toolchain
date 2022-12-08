@@ -22,6 +22,7 @@ security:
       - global:
           strategy: triggeringUsersAuthorizationStrategy
 
+
 jobs:
   - script: >
       job('example') {
@@ -50,7 +51,7 @@ jobs:
             scm {
               git {
                 remote { url(repo) }
-                branches('master', '**/feature*')
+                branches('main')
                 scriptPath('jenkins/jenkins-agent/Jenkinsfile')
                 extensions { }  // required as otherwise it may try to tag the repo, which you may not want
               }
@@ -70,18 +71,11 @@ jobs:
             scm {
               git {
                 remote { url(repo) }
-                branches('master')
+                branches('main')
                 scriptPath('Jenkinsfile-3')
                 extensions { }  // required as otherwise it may try to tag the repo, which you may not want
               }
             }
           }
-        }
-      }
-  - script: >
-      listView('Pipeline-view') {
-        jobs {
-          name('Toolchain')
-          name('docker agent')
         }
       }
