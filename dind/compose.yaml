@@ -1,39 +1,39 @@
 version: '3.8'
 networks:
-  jenkins-network:
-    name: jenkins
+  jenkinscasc-network:
+    name: jenkinscasc
 volumes:
   data:
-    name: jenkins-data
+    name: jenkinscasc-data
   certs:
-    name: jenkins-docker-certs
+    name: jenkinscasc-docker-certs
 services:
   dind:
-    container_name: jenkins-docker
+    container_name: jenkinscasc-docker
     image: docker:dind
     privileged: true
     restart: unless-stopped
     networks:
-      jenkins-network:
+      jenkinscasc-network:
         aliases:
           - docker
     volumes:
-      - data:/var/jenkins_home
+      - data:/var/jenkinscasc_home
       - certs:/certs/client
     environment:
       - DOCKER_TLS_CERTDIR=/certs
-    
-  jenkins:
-    container_name: jenkins-blueocean
-    image: jenkinsci/blueocean
+      
+  jenkinscasc:
+    build: .
+    container_name: jenkinscasc
     restart: unless-stopped
     networks:
-      - jenkins-network
+      - jenkinscasc-network
     ports:
       - 8080:8080
       - 50000:50000
     volumes:
-      - data:/var/jenkins_home
+      - data:/var/jenkinscasc_home
       - certs:/certs/client:ro
     environment:
       - DOCKER_HOST=tcp://docker:2376
