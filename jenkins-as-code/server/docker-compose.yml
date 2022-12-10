@@ -19,7 +19,7 @@ services:
     privileged: true
 
   jenkins:
-    image: jenkins-as-code
+    build: .
     container_name: jenkins
     restart: unless-stopped
     depends_on:
@@ -39,8 +39,7 @@ services:
       DOCKER_TLS_VERIFY: ""
       JENKINS_ADMIN_PASSWORD: adminn
       JENKINS_SSH_GIT_KEY: "$(cat /Users/ppalit/.ssh/id_rsa)"
-      JENKINS_JOB_DSL_URL: "git@github.com:dj-wasabi/jenkins-as-code.git"
-      JENKINS_LIB_DSL_URL: "https://bitbucket.org/wernerdijkerman/jenkins-shared-library.git"
+      JENKINS_JOB_DSL_URL: "git@github.com:ppalit/devops_toolchain.git"
     volumes:
       - ./casc:/var/jenkins_home/casc
 

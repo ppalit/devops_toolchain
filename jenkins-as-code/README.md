@@ -12,7 +12,7 @@ The blogs can be found here:
 Before we start, make sure that we set an environment variable named `EXPORTED_PASSWORD` which contains the contents of the SSH private key. In my case, my private key that has access to Github is `~/.ssh/wd_id_rsa`. So my command looks like:
 
 ```sh
-export EXPORTED_PASSWORD=$(cat /Users/ppalit/.ssh/id_rsa)
+export EXPORTED_PASSWORD=$(cat ~/.ssh/id_rsa)
 ```
 
 Once done, execute the `docker compose` command:

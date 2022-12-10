@@ -14,8 +14,35 @@ jenkins:
             image: "jenkins/agent:latest"
             privileged: true
             environment:
-              - "TZ=Europe/Amsterdam"
+              - "TZ=America/New_York"
           instanceCapStr: "99"
           labelString: "worker"
           name: "worker"
+          remoteFs: "/home/jenkins/agent"
+        - connector:
+            attach:
+              user: "jenkins"
+          dockerTemplateBase:
+            bindAllPorts: true
+            image: "jenkins/agent:jdk11-windowsservercore-ltsc2019"
+            privileged: true
+            environment:
+              - "TZ=America/New_York"
+          instanceCapStr: "99"
+          labelString: "agentWindows"
+          name: "agentWindows"
+          remoteFs: "C:/Users/jenkins/Work"
+        - connector:
+            attach:
+              user: "jenkins"
+          dockerTemplateBase:
+            bindAllPorts: true
+            image: "agentterraform"
+            privileged: true
+            environment:
+              - "TZ=America/New_York"
+          instanceCapStr: "99"
+          labelString: "agentterraform"
+          name: "agentterraform"
+          pullStrategy: PULL_NEVER
           remoteFs: "/home/jenkins/agent"
