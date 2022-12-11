@@ -47,6 +47,22 @@ services:
       - data:/var/jenkins_home
       - certs:/certs/client:ro
 
+  dind:
+    container_name: jenkins-docker
+    image: docker:dind
+    privileged: true
+    restart: unless-stopped
+    networks:
+      jenkinscasc-network:
+        aliases:
+          - docker
+    volumes:
+      - data:/var/jenkinscasc_home
+      - certs:/certs/client
+    environment:
+      - DOCKER_TLS_CERTDIR=/certs
+
+      
 volumes:
   data:
     name: jenkins-data
