@@ -6,7 +6,7 @@ services:
     image: alpine/socat
     container_name: socat
     ports:
-      - "2375:2375"
+      - "2376:2376"
     networks:
       jenkins:
         aliases:
@@ -15,7 +15,8 @@ services:
       - DOCKER_TLS_CERTDIR=/certs
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-    command: "tcp-listen:2375,fork,reuseaddr unix-connect:/var/run/docker.sock"
+      - certs:/certs/client
+    command: "tcp-listen:2376,fork,reuseaddr unix-connect:/var/run/docker.sock"
     privileged: true
 
   jenkins:
@@ -35,13 +36,21 @@ services:
       - 8080:8080
       - 50000:50000
     environment:
-      DOCKER_HOST: "tcp://docker:2375"
-      DOCKER_TLS_VERIFY: ""
+      DOCKER_HOST: "tcp://docker:2376"
+      DOCKER_TLS_VERIFY: 1
+      DOCKER_CERT_PATH: /certs/client
       JENKINS_ADMIN_PASSWORD: adminn
-      JENKINS_SSH_GIT_KEY: "$(cat /Users/ppalit/.ssh/id_rsa)"
+      JENKINS_SSH_GIT_KEY: "$(cat ~/.ssh/id_rsa)"
       JENKINS_JOB_DSL_URL: "git@github.com:ppalit/devops_toolchain.git"
+      DOCKER_TLS_CERTDIR: /certs
     volumes:
-      - ./casc:/var/jenkins_home/casc
+      - data:/var/jenkins_home
+      - certs:/certs/client:ro
 
+volumes:
+  data:
+    name: jenkins-data
+  certs:
+    name: jenkins-docker-certs
 networks:
   jenkins:
