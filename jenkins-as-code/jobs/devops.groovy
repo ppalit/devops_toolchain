@@ -17,11 +17,18 @@ class JobConstructor {
     }
 }
 
-job('Terraform Verify') {
+jobList.each { job ->
+    println "[INFO] Generating view... " + basePath
+    println "[INFO] Generating job... " + job.jobName
+    def jobName = job.jobName
+
+    job(jobName) {
        steps {
          shell('terraform -version')
+        }
     }
 }
+
 
 
 listView(basePath) {
