@@ -1,0 +1,68 @@
+import hudson.util.VersionNumber
+
+pipeline {
+    agent any
+    
+    stages {
+        stage('Clone Repository') {
+            steps {
+                git 'https://github.com/example/repository.git'
+            }
+        }
+        
+        stage('Tarzip Modules Directory') {
+            steps {
+                sh 'cd modules && tar -czf modules.tar.gz .'
+            }
+        }
+        
+        stage('Get Module Version') {
+            steps {
+                script {
+                    def apiUrl = 'https://app.terraform.io/api/v2/organizations/my-organization/registry-modules/private/my-organization/my-module/aws'
+                    def token = 'YOUR_AUTH_TOKEN'
+                    
+                    def response = sh script: "curl --request GET --header 'Authorization: Bearer $token' --header 'Content-Type: application/vnd.api+json' ${apiUrl}", returnStdout: true
+                    
+                    def jsonResponse = readJSON text: response
+                    
+                    def version = jsonResponse.data.attributes['version-statuses'][0].version
+                    
+                    def incrementedVersion = new VersionNumber(version).nextVersion().toString()
+                    
+                    def payload = """
+                        {
+                            "data": {
+                                "type": "registry-module-versions",
+                                "attributes": {
+                                    "version": "${incrementedVersion}"
+                                }
+                            }
+                        }
+                    """
+                    
+                    def payloadFile = 'payload.json'
+                    writeFile file: payloadFile, text: payload
+                }
+            }
+        }
+        
+        stage('Create Module Version') {
+            steps {
+                script {
+                    def apiUrl = 'https://app.terraform.io/api/v2/organizations/my-organization/registry-modules/private/my-organization/my-module/aws/versions'
+                    def token = 'YOUR_AUTH_TOKEN'
+                    def payloadFile = 'payload.json'
+                    
+                    def response = sh script: "curl --header 'Authorization: Bearer $token' --header 'Content-Type: application/vnd.api+json' --request POST --data @${payloadFile} ${apiUrl}", returnStdout: true
+                    
+                    def jsonResponse = readJSON text: response
+                    
+                    def uploadLink = jsonResponse.data.attributes['upload-link']
+                    
+                    sh "curl -X POST -F 'file=@modules.tar.gz' ${uploadLink}"
+                }
+            }
+        }
+    }
+}
