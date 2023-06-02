@@ -1,4 +1,7 @@
 import hudson.util.VersionNumber
+//Please replace 'YOUR_AUTH_TOKEN' with your actual authentication token and adjust the apiUrl variables to match your organization, module, and other parameters.
+
+//Ensure that you have the necessary plugins installed, such as git and pipeline-utility-steps, for this pipeline to function correctly.
 
 pipeline {
     agent any
@@ -18,31 +21,32 @@ pipeline {
         
         stage('Get Module Version') {
             steps {
-                script {
-                    def apiUrl = 'https://app.terraform.io/api/v2/organizations/my-organization/registry-modules/private/my-organization/my-module/aws'
-                    def token = 'YOUR_AUTH_TOKEN'
-                    
-                    def response = sh script: "curl --request GET --header 'Authorization: Bearer $token' --header 'Content-Type: application/vnd.api+json' ${apiUrl}", returnStdout: true
-                    
-                    def jsonResponse = readJSON text: response
-                    
-                    def version = jsonResponse.data.attributes['version-statuses'][0].version
-                    
-                    def incrementedVersion = new VersionNumber(version).nextVersion().toString()
-                    
-                    def payload = """
-                        {
-                            "data": {
-                                "type": "registry-module-versions",
-                                "attributes": {
-                                    "version": "${incrementedVersion}"
+                withCredentials([string(credentialsId: 'YOUR_CREDENTIALS_ID', variable: 'AUTH_TOKEN')]) {
+                    script {
+                        def apiUrl = 'https://app.terraform.io/api/v2/organizations/my-organization/registry-modules/private/my-organization/my-module/aws'
+                        
+                        def response = sh script: "curl --request GET --header 'Authorization: Bearer ${AUTH_TOKEN}' --header 'Content-Type: application/vnd.api+json' ${apiUrl}", returnStdout: true
+                        
+                        def jsonResponse = readJSON text: response
+                        
+                        def version = jsonResponse.data.attributes['version-statuses'][0].version
+                        
+                        def incrementedVersion = new VersionNumber(version).nextVersion().toString()
+                                          
+                        def payload = """
+                            {
+                                "data": {
+                                    "type": "registry-module-versions",
+                                    "attributes": {
+                                        "version": "${incrementedVersion}"
+                                    }
                                 }
                             }
-                        }
-                    """
-                    
-                    def payloadFile = 'payload.json'
-                    writeFile file: payloadFile, text: payload
+                        """
+                        
+                        def payloadFile = 'payload.json'
+                        writeFile file: payloadFile, text: payload
+                    }
                 }
             }
         }
@@ -51,18 +55,20 @@ pipeline {
             steps {
                 script {
                     def apiUrl = 'https://app.terraform.io/api/v2/organizations/my-organization/registry-modules/private/my-organization/my-module/aws/versions'
-                    def token = 'YOUR_AUTH_TOKEN'
                     def payloadFile = 'payload.json'
                     
-                    def response = sh script: "curl --header 'Authorization: Bearer $token' --header 'Content-Type: application/vnd.api+json' --request POST --data @${payloadFile} ${apiUrl}", returnStdout: true
-                    
-                    def jsonResponse = readJSON text: response
-                    
-                    def uploadLink = jsonResponse.data.attributes['upload-link']
-                    
-                    sh "curl -X POST -F 'file=@modules.tar.gz' ${uploadLink}"
+                    withCredentials([string(credentialsId: 'YOUR_CREDENTIALS_ID', variable: 'AUTH_TOKEN')]) {
+                        def response = sh script: "curl --header 'Authorization: Bearer ${AUTH_TOKEN}' --header 'Content-Type: application/vnd.api+json' --request POST --data @${payloadFile} ${apiUrl}", returnStdout: true
+                        
+                        def jsonResponse = readJSON text: response
+                        
+                        def uploadLink = jsonResponse.data.attributes['upload-link']
+                        
+                        sh "curl -X POST -F 'file=@modules.tar.gz' ${uploadLink}"
+                    }
                 }
             }
         }
     }
 }
+
